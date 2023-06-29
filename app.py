@@ -3,8 +3,32 @@ import flet as ft
 from common_elements import Bar, Rail
 from views import ViewMain, ViewModels, ViewValidations, ViewQuestionnaires, ViewNewValidation
 
+from sqlalchemy import create_engine
+from sqlalchemy import func
+from model import Questionnaire, Base
+
+from misc import DATABASE_URL
+
+engine = create_engine(DATABASE_URL)
+
+# Создание таблицы
+Base.metadata.create_all(engine) 
+
+from sqlalchemy.orm import sessionmaker
+Session = sessionmaker(bind=engine)
+
+
 
 def main(page: ft.Page):
+
+    theme = ft.Theme()
+    theme.page_transitions.android = ft.PageTransitionTheme.OPEN_UPWARDS
+    theme.page_transitions.ios = ft.PageTransitionTheme.CUPERTINO
+    theme.page_transitions.macos = ft.PageTransitionTheme.FADE_UPWARDS
+    theme.page_transitions.linux = ft.PageTransitionTheme.ZOOM
+    theme.page_transitions.windows = ft.PageTransitionTheme.NONE
+    page.theme = theme
+    page.update()
 
     routes_keys = ['/', 
                   '/models',
@@ -17,7 +41,7 @@ def main(page: ft.Page):
     routes_values = [ViewMain(Bar("Главная"), rail),
                      ViewModels(Bar("Реестр моделей"), rail),
                      ViewValidations(Bar("Реестр валидаций"), rail),
-                     ViewQuestionnaires(Bar("Реестр опросников"), rail),
+                     ViewQuestionnaires(page, Bar("Реестр опросников"), rail),
                      ViewNewValidation(Bar("Новая валидация"), rail)
                      ]
     
@@ -40,3 +64,4 @@ def main(page: ft.Page):
 
 
 ft.app(target=main)
+#ft.app(target=main, view=ft.WEB_BROWSER)

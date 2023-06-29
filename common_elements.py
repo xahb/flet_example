@@ -5,6 +5,7 @@ app_icon = ft.Icon(name=ft.icons.FAVORITE, color=ft.colors.PINK)
 def Bar(title):
     return ft.AppBar(leading=app_icon, title=ft.Text(title))
 
+
 #боковая панель (навигация)
 def Rail(page, routes_keys):
 

@@ -1,9 +1,9 @@
 import flet as ft
-from misc import questionnaire
+from misc import qq
 
-def ViewNewValidation(bar, rail):
+#опросник
+def RenderedQuestionnaire(questionnaire):
 
-    #опросник
     questionnaire_elements = []
 
     for ch_num, chapter in questionnaire.items():
@@ -20,13 +20,34 @@ def ViewNewValidation(bar, rail):
 
         questionnaire_elements.append(ft.Divider(thickness=1))
 
-    rendered_questionnaire = ft.Column(questionnaire_elements)
+    return ft.Column(questionnaire_elements, scroll=ft.ScrollMode.AUTO)
 
+
+def QuestionnaireSelector(source):
+
+    def selector_changed():
+        pass
+
+    questionnaires_list = []   
+    for questionnaire_name, questionnaire_dict in source.items():
+        for version, version_list in questionnaire_dict.items():
+            questionnaires_list.append(f"{questionnaire_name} - вер. {version}")
+
+    return ft.Dropdown(options=[ft.dropdown.Option(x) for x in questionnaires_list], on_change=selector_changed)
+
+
+def ViewNewValidation(bar, rail):
+
+    questionnaire = qq['Нормальный опросник'][1][0]
+    main_column = ft.Column(controls=[QuestionnaireSelector(qq), RenderedQuestionnaire(questionnaire)], scroll=ft.ScrollMode.AUTO)
 
     view_New_Validation = ft.View("/new_validation",
                 [
                     bar,
-                    ft.Row([rail, ft.VerticalDivider(width=1), rendered_questionnaire], expand=True),
+                    ft.Row([rail, 
+                            ft.VerticalDivider(width=1),
+                            main_column
+                            ], expand=True),
                 ],
             )
     
