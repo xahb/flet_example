@@ -7,15 +7,15 @@ from sqlalchemy import create_engine
 from sqlalchemy import func
 from model import Questionnaire, Base
 
-from misc import DATABASE_URL
+#from misc import DATABASE_URL
 
-engine = create_engine(DATABASE_URL)
+#engine = create_engine(DATABASE_URL)
 
 # Создание таблицы
-Base.metadata.create_all(engine) 
+#Base.metadata.create_all(engine) 
 
-from sqlalchemy.orm import sessionmaker
-Session = sessionmaker(bind=engine)
+#from sqlalchemy.orm import sessionmaker
+#Session = sessionmaker(bind=engine)
 
 
 
