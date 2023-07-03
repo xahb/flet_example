@@ -58,7 +58,7 @@ def ViewQuestionnaires(page, bar, rail):
             self.annotation = ft.Text(f"Раздел {self.chapter.id}:", width=150, size=20, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
             self.chapter_name = ft.TextField(value= self.chapter.text, text_size=18, width=765, border=ft.InputBorder.UNDERLINE)
             self.button_delete = ft.IconButton(icon=ft.icons.DELETE_FOREVER_ROUNDED, icon_color="pink600", icon_size=30, tooltip="Удалить раздел", on_click=self.delete_self)
-            self.questions = ft.Column([RenderedQuestion(question.id, question.text, question.is_obligatory, self.delete_question) for question in self.questions_list])
+            self.questions = ft.Column([RenderedQuestion(num, question.text, question.is_obligatory, self.delete_question) for num, question in enumerate(self.questions_list, start=1)])
             self.button_add_question = ft.ElevatedButton("Добавить вопрос", icon="add", data=str(self.chapter.id)+' question', on_click=self.add_question)
             self.divider = ft.Divider(thickness=1)
             self.chapter_name_row = ft.Row(controls=[self.annotation, self.chapter_name, self.button_delete], width=1000)
@@ -66,7 +66,8 @@ def ViewQuestionnaires(page, bar, rail):
             return self.final_column
         
         def add_question(self, e):
-            self.questions.controls.append(RenderedQuestion(0,"",0, self.delete_question))
+            num = len(self.questions.controls)+1
+            self.questions.controls.append(RenderedQuestion(num,"",0, self.delete_question))
             self.update()
 
         def delete_question(self, question):
@@ -119,7 +120,7 @@ def ViewQuestionnaires(page, bar, rail):
             self.button_allow_edit.visible = True
             self.button_cancel_edit.visible = False
             self.button_save_edit.visible = False
-            self.chapters = ft.Column([RenderedChapter(chapter, questions, self.delete_chapter) for chapter, questions in self.raw_chapters.items()], disabled=True)
+            #self.chapters = ft.Column([RenderedChapter(chapter, questions, self.delete_chapter) for chapter, questions in self.raw_chapters.items()], disabled=True)
             self.update()
         
         def save_edit(self, e):
