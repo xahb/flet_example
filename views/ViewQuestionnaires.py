@@ -79,14 +79,15 @@ def ViewQuestionnaires(page, bar, rail):
 
     class RenderedQuestionnaire(ft.UserControl):
 
-        def __init__(self, questionnaire):
+        def __init__(self, questionnaire_elements):
             super().__init__()
-            self.questionnaire = questionnaire
+            self.questionnaire = questionnaire_elements['questionnaire']
+            self.raw_chapters = questionnaire_elements['chapters']
             self.name_text = "Хороший опросник"
 
         def build(self):
             self.name = ft.Text(self.name_text, width=900, size=32, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.LEFT)
-            self.chapters = ft.Column([RenderedChapter(chapter, questions, self.delete_chapter) for chapter, questions in self.questionnaire.chapters.items()], disabled=True)
+            self.chapters = ft.Column([RenderedChapter(chapter, questions, self.delete_chapter) for chapter, questions in self.raw_chapters.items()], disabled=True)
             self.button_add_chapter = ft.ElevatedButton("Добавить раздел", icon="add", on_click=self.add_chapter, disabled=True)
             self.button_allow_edit = ft.FilledButton("Редактировать", icon="edit", on_click=self.allow_edit)
             self.button_cancel_edit = ft.FilledButton("Отменить", icon="edit_off", visible=False, on_click=self.cancel_edit)
@@ -118,7 +119,7 @@ def ViewQuestionnaires(page, bar, rail):
             self.button_allow_edit.visible = True
             self.button_cancel_edit.visible = False
             self.button_save_edit.visible = False
-            self.chapters = ft.Column([RenderedChapter(chapter, questions, self.delete_chapter) for chapter, questions in self.questionnaire.chapters.items()], disabled=True)
+            self.chapters = ft.Column([RenderedChapter(chapter, questions, self.delete_chapter) for chapter, questions in self.raw_chapters.items()], disabled=True)
             self.update()
         
         def save_edit(self, e):

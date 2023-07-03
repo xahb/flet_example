@@ -24,7 +24,7 @@ def main(page: ft.Page):
     theme = ft.Theme()
     theme.page_transitions.android = ft.PageTransitionTheme.OPEN_UPWARDS
     theme.page_transitions.ios = ft.PageTransitionTheme.CUPERTINO
-    theme.page_transitions.macos = ft.PageTransitionTheme.FADE_UPWARDS
+    theme.page_transitions.macos = ft.PageTransitionTheme.NONE
     theme.page_transitions.linux = ft.PageTransitionTheme.ZOOM
     theme.page_transitions.windows = ft.PageTransitionTheme.NONE
     page.theme = theme

@@ -84,7 +84,9 @@ class DataBase:
         for chapter in chapters: 
             full_chapters[chapter] = [question for question in questions if question.id_chapter == chapter.id]
 
-        questionnaire.chapters = full_chapters
+        #if questionnaire is not None:
+            #questionnaire.chapters = full_chapters
+            #setattr(questionnaire, 'chapters', full_chapters)
 
-        return questionnaire #{'Questionnaire':questionnaire, 'Chapters':chapters, 'Questions':questions}
+        return {'questionnaire':questionnaire, 'chapters':full_chapters} #{'Questionnaire':questionnaire, 'Chapters':chapters, 'Questions':questions}
 
