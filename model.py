@@ -35,14 +35,16 @@ class Chapter(Base):
     id = Column(Integer, primary_key=True)
     text = Column(String)
     id_questionnaire = Column(Integer)
+    order = Column(Integer)
 
 
 # эта штука нужна для создания нового раздела
 class DummyChapter():
-    def __init__(self, id, text, id_questionnaire):
+    def __init__(self, id, text, id_questionnaire, order):
         self.id = id
         self.text = text
         self.id_questionnaire = id_questionnaire
+        self.order = order
 
 
 class Question(Base):
@@ -52,16 +54,18 @@ class Question(Base):
     is_obligatory = Column(Integer)
     id_chapter = Column(Integer)
     id_questionnaire = Column(Integer)
+    order = Column(Integer)
 
 
 # эта штука нужна для создания нового раздела
 class DummyQuestion():
-    def __init__(self, id, text, is_obligatory, id_chapter, id_questionnaire):
+    def __init__(self, id, text, is_obligatory, id_chapter, id_questionnaire, order):
         self.id = id
         self.text = text
         self.is_obligatory = is_obligatory
         self.id_chapter = id_chapter
         self.id_questionnaire = id_questionnaire
+        self.order = order
 
 
 class DataBase:
@@ -77,8 +81,8 @@ class DataBase:
     
     def select_questionnaire_by_id(self, ext_id):
         questionnaire = self.session.query(Questionnaire).filter_by(id = ext_id).first()
-        chapters = self.session.query(Chapter).filter_by(id_questionnaire = ext_id)
-        questions = self.session.query(Question).filter_by(id_questionnaire = ext_id)
+        chapters = self.session.query(Chapter).filter_by(id_questionnaire = ext_id).order_by("order")
+        questions = self.session.query(Question).filter_by(id_questionnaire = ext_id).order_by("order")
 
         full_chapters = {} #[setattr(chapter, "Questions", [question for question in questions if question.id_chapter == chapter.id]) for chapter in chapters]
         for chapter in chapters: 

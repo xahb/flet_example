@@ -7,6 +7,8 @@ from model import DataBase
 from model import DummyChapter
 from model import DummyQuestion
 
+from styles import HeadlineStyle, SubHeadlineStyle
+
 def ViewQuestionnaires(page, bar, rail):
 
     class RenderedQuestionnairesTable(ft.UserControl):
@@ -31,9 +33,9 @@ def ViewQuestionnaires(page, bar, rail):
    
     class RenderedQuestion(ft.UserControl):
 
-        def __init__(self, number, text, obligatory, delete_question):
+        def __init__(self, rank, text, obligatory, delete_question):
             super().__init__()
-            self.annotation = ft.Text(f"Вопрос {number}:", width=150, size=15, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
+            self.annotation = ft.Text(f"Вопрос {rank}:", width=150, size=15, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
             self.text = ft.TextField(multiline=True, value= text, border=ft.InputBorder.UNDERLINE, width=600)
             self.is_obligatory = ft.Checkbox(label="Обязательный", value=obligatory, width=150)
             self.button_delete = ft.IconButton(icon=ft.icons.DELETE_FOREVER_ROUNDED, icon_color="pink600", icon_size=30, tooltip="Удалить вопрос", on_click=self.delete_self)
@@ -45,6 +47,9 @@ def ViewQuestionnaires(page, bar, rail):
         def delete_self(self, e):
             self.delete_question(self)
 
+        def update_rank(self, new_rank):
+            self.annotation = ft.Text(f"Вопрос {new_rank}:", width=150, size=15, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
+
 
     class RenderedChapter(ft.UserControl):
 
@@ -55,8 +60,9 @@ def ViewQuestionnaires(page, bar, rail):
             self.delete_chapter = delete_chapter
 
         def build(self):
-            self.annotation = ft.Text(f"Раздел {self.chapter.id}:", width=150, size=20, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
-            self.chapter_name = ft.TextField(value= self.chapter.text, text_size=18, width=765, border=ft.InputBorder.UNDERLINE)
+            self.annotation = ft.Text(f"Раздел {self.chapter.order}:", width=150, size=20, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
+            #self.annotation = ft.Text(f"Раздел {self.chapter.order}:", text_style=SubHeadlineStyle, width=150, text_align=ft.TextAlign.CENTER)
+            self.chapter_name = ft.TextField(value= self.chapter.text, text_style=SubHeadlineStyle, width=765, border=ft.InputBorder.UNDERLINE)
             self.button_delete = ft.IconButton(icon=ft.icons.DELETE_FOREVER_ROUNDED, icon_color="pink600", icon_size=30, tooltip="Удалить раздел", on_click=self.delete_self)
             self.questions = ft.Column([RenderedQuestion(num, question.text, question.is_obligatory, self.delete_question) for num, question in enumerate(self.questions_list, start=1)])
             self.button_add_question = ft.ElevatedButton("Добавить вопрос", icon="add", data=str(self.chapter.id)+' question', on_click=self.add_question)
@@ -72,6 +78,8 @@ def ViewQuestionnaires(page, bar, rail):
 
         def delete_question(self, question):
             self.questions.controls.remove(question)
+            for num, question in enumerate(self.questions.controls): #не работает, видимо надо выносить номера из вопросов наружу
+                question.update_rank(num)
             self.update()
         
         def delete_self(self, e):
@@ -84,10 +92,10 @@ def ViewQuestionnaires(page, bar, rail):
             super().__init__()
             self.questionnaire = questionnaire_elements['questionnaire']
             self.raw_chapters = questionnaire_elements['chapters']
-            self.name_text = "Хороший опросник"
+            #self.name_text = self.questionnaire.name
 
-        def build(self):
-            self.name = ft.Text(self.name_text, width=900, size=32, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.LEFT)
+        def build(self):    
+            self.name = ft.TextField(value=self.questionnaire.name, width=900, text_style=HeadlineStyle, border=ft.InputBorder.UNDERLINE, disabled = True)
             self.chapters = ft.Column([RenderedChapter(chapter, questions, self.delete_chapter) for chapter, questions in self.raw_chapters.items()], disabled=True)
             self.button_add_chapter = ft.ElevatedButton("Добавить раздел", icon="add", on_click=self.add_chapter, disabled=True)
             self.button_allow_edit = ft.FilledButton("Редактировать", icon="edit", on_click=self.allow_edit)
@@ -98,8 +106,13 @@ def ViewQuestionnaires(page, bar, rail):
             return self.final_column 
         
         def add_chapter(self, e):
-            questions = [DummyQuestion(0,'',0,0,0),DummyQuestion(0,'',0,0,0)]
-            self.chapters.controls.append(RenderedChapter(DummyChapter(0,'',0), questions, self.delete_chapter))
+            chapter = DummyChapter(id = 0, 
+                                   text = '', 
+                                   id_questionnaire = self.questionnaire.id, 
+                                   order = len(self.chapters.controls) + 1
+                                   )
+            questions = [] 
+            self.chapters.controls.append(RenderedChapter(chapter, questions, self.delete_chapter))
             self.update()
 
         def delete_chapter(self, chapter):
@@ -107,6 +120,7 @@ def ViewQuestionnaires(page, bar, rail):
             self.update()
 
         def allow_edit(self, e):
+            self.name.disabled = False
             self.chapters.disabled = False
             self.button_add_chapter.disabled = False
             self.button_allow_edit.visible = False
@@ -115,6 +129,7 @@ def ViewQuestionnaires(page, bar, rail):
             self.update()
 
         def cancel_edit(self, e):
+            self.name.disabled = True
             self.chapters.disabled = True
             self.button_add_chapter.disabled = True
             self.button_allow_edit.visible = True
