@@ -28,6 +28,15 @@ class Questionnaire(Base):
     version = Column(Integer)
     author = Column(String)
     created = Column(DateTime)
+    #id_chapters = Column(String)
+
+    def __init__(self, name, version, author, id_chapters):
+        self.id_successor = None
+        self.name = name
+        self.version = version
+        self.author = ''
+        self.created = datetime.now()
+        #self.id_chapters = ''.join()
 
 
 class Chapter(Base):
@@ -36,6 +45,12 @@ class Chapter(Base):
     text = Column(String)
     id_questionnaire = Column(Integer)
     order = Column(Integer)
+    #id_questions = Column(String)
+
+    def __init__(self, text, id_questionnaire, order):
+        self.text = text
+        self.id_questionnaire = id_questionnaire
+        self.order = order
 
 
 # эта штука нужна для создания нового раздела
@@ -45,6 +60,7 @@ class DummyChapter():
         self.text = text
         self.id_questionnaire = id_questionnaire
         self.order = order
+        #self.questions = []
 
 
 class Question(Base):
@@ -55,6 +71,13 @@ class Question(Base):
     id_chapter = Column(Integer)
     id_questionnaire = Column(Integer)
     order = Column(Integer)
+
+    def __init__(self, text, is_obligatory, id_chapter, id_questionnaire):
+        self.text = text
+        self.is_obligatory = is_obligatory
+        self.id_chapter = id_chapter
+        self.id_questionnaire = id_questionnaire
+
 
 
 # эта штука нужна для создания нового раздела
@@ -92,5 +115,17 @@ class DataBase:
             #questionnaire.chapters = full_chapters
             #setattr(questionnaire, 'chapters', full_chapters)
 
-        return {'questionnaire':questionnaire, 'chapters':full_chapters} #{'Questionnaire':questionnaire, 'Chapters':chapters, 'Questions':questions}
+        return {'questionnaire':questionnaire, 'chapters':full_chapters}
+    
+    def add_questionnaire(self, new_questionnaire):
+        self.session.add(new_questionnaire)
+        self.session.commit()
+
+    def add_chapter(self, new_chapter):
+        self.session.add(new_chapter)
+        self.session.commit()
+
+    def add_question(self, new_question):
+        self.session.add(new_question)
+        self.session.commit()
 

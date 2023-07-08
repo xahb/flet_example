@@ -4,6 +4,7 @@ from misc import qq
 from misc import DATABASE_URL
 
 from model import DataBase
+from model import Questionnaire
 from model import DummyChapter
 from model import DummyQuestion
 
@@ -105,6 +106,8 @@ def ViewQuestionnaires(page, bar, rail):
             self.final_column = ft.Column([self.name, self.edit_control_row, self.chapters, self.button_add_chapter], scroll=ft.ScrollMode.AUTO)
             return self.final_column 
         
+        # Добавление / удаление элементов
+        
         def add_chapter(self, e):
             chapter = DummyChapter(id = 0, 
                                    text = '', 
@@ -118,6 +121,8 @@ def ViewQuestionnaires(page, bar, rail):
         def delete_chapter(self, chapter):
             self.chapters.controls.remove(chapter)
             self.update()
+
+        # Редактирование
 
         def allow_edit(self, e):
             self.name.disabled = False
@@ -139,14 +144,16 @@ def ViewQuestionnaires(page, bar, rail):
             self.update()
         
         def save_edit(self, e):
-            pass
+            new_questionnaire = Questionnaire(name=self.name.value, version=self.questionnaire.version+1, author='', id_chapters='')
+            db.add_questionnaire(new_questionnaire)
+            self.cancel_edit(e)
 
  
     db = DataBase(db_name=DATABASE_URL)
 
     tables_select = db.select_questionnaries_table()
 
-    questionnaire_select = db.select_questionnaire_by_id(2)
+    questionnaire_select = db.select_questionnaire_by_id(1)
 
 
  
