@@ -4,9 +4,8 @@ from misc import qq
 from misc import DATABASE_URL
 
 from model import DataBase
-from model import Questionnaire
-from model import DummyChapter
-from model import DummyQuestion
+from model import Questionnaire, Chapter, Question
+from utils import hash_id, list_to_string2
 
 from styles import HeadlineStyle, SubHeadlineStyle
 
@@ -54,19 +53,19 @@ def ViewQuestionnaires(page, bar, rail):
 
     class RenderedChapter(ft.UserControl):
 
-        def __init__(self, chapter, questions_list, delete_chapter):
+        def __init__(self, chapter, rank, questions_list, delete_chapter):
             super().__init__()
             self.chapter = chapter
+            self.rank = rank
             self.questions_list = questions_list
             self.delete_chapter = delete_chapter
 
         def build(self):
-            self.annotation = ft.Text(f"Раздел {self.chapter.order}:", width=150, size=20, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
-            #self.annotation = ft.Text(f"Раздел {self.chapter.order}:", text_style=SubHeadlineStyle, width=150, text_align=ft.TextAlign.CENTER)
+            self.annotation = ft.Text(f"Раздел {self.rank}:", width=150, size=20, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
             self.chapter_name = ft.TextField(value= self.chapter.text, text_style=SubHeadlineStyle, width=765, border=ft.InputBorder.UNDERLINE)
             self.button_delete = ft.IconButton(icon=ft.icons.DELETE_FOREVER_ROUNDED, icon_color="pink600", icon_size=30, tooltip="Удалить раздел", on_click=self.delete_self)
             self.questions = ft.Column([RenderedQuestion(num, question.text, question.is_obligatory, self.delete_question) for num, question in enumerate(self.questions_list, start=1)])
-            self.button_add_question = ft.ElevatedButton("Добавить вопрос", icon="add", data=str(self.chapter.id)+' question', on_click=self.add_question)
+            self.button_add_question = ft.ElevatedButton("Добавить вопрос", icon="add", data=str(self.rank)+' question', on_click=self.add_question)
             self.divider = ft.Divider(thickness=1)
             self.chapter_name_row = ft.Row(controls=[self.annotation, self.chapter_name, self.button_delete], width=1000)
             self.final_column = ft.Column([self.chapter_name_row, self.questions, self.button_add_question, self.divider])
@@ -91,13 +90,19 @@ def ViewQuestionnaires(page, bar, rail):
 
         def __init__(self, questionnaire_elements):
             super().__init__()
-            self.questionnaire = questionnaire_elements['questionnaire']
+            self.initial_questionnaire = questionnaire_elements['questionnaire']
+            self.questionnaire = Questionnaire(name = self.initial_questionnaire.name, 
+                                               version = self.initial_questionnaire.version, 
+                                               author = self.initial_questionnaire.author,
+                                               id_chapters_string = self.initial_questionnaire.id_chapters)
             self.raw_chapters = questionnaire_elements['chapters']
+            self.questionnaire.set_id_chapters([x.id for x in self.raw_chapters.keys()])
+            print(self.questionnaire.id_chapters)
             #self.name_text = self.questionnaire.name
 
         def build(self):    
-            self.name = ft.TextField(value=self.questionnaire.name, width=900, text_style=HeadlineStyle, border=ft.InputBorder.UNDERLINE, disabled = True)
-            self.chapters = ft.Column([RenderedChapter(chapter, questions, self.delete_chapter) for chapter, questions in self.raw_chapters.items()], disabled=True)
+            self.name = ft.TextField(value=self.questionnaire.name, width=900, text_style=HeadlineStyle, border=ft.InputBorder.UNDERLINE, disabled = True, on_change=self.name_changed)
+            self.chapters = ft.Column([RenderedChapter(chapter, 1, questions, self.delete_chapter) for chapter, questions in self.raw_chapters.items()], disabled=True) #rank
             self.button_add_chapter = ft.ElevatedButton("Добавить раздел", icon="add", on_click=self.add_chapter, disabled=True)
             self.button_allow_edit = ft.FilledButton("Редактировать", icon="edit", on_click=self.allow_edit)
             self.button_cancel_edit = ft.FilledButton("Отменить", icon="edit_off", visible=False, on_click=self.cancel_edit)
@@ -106,16 +111,19 @@ def ViewQuestionnaires(page, bar, rail):
             self.final_column = ft.Column([self.name, self.edit_control_row, self.chapters, self.button_add_chapter], scroll=ft.ScrollMode.AUTO)
             return self.final_column 
         
+        def name_changed(self, e):
+            self.questionnaire.name = e.control.value
+            self.update()
+        
         # Добавление / удаление элементов
         
         def add_chapter(self, e):
-            chapter = DummyChapter(id = 0, 
-                                   text = '', 
-                                   id_questionnaire = self.questionnaire.id, 
-                                   order = len(self.chapters.controls) + 1
-                                   )
+            
+            empty_chapter = Chapter(text='', 
+                              id_questions_string = list_to_string2([])
+                              )
             questions = [] 
-            self.chapters.controls.append(RenderedChapter(chapter, questions, self.delete_chapter))
+            self.chapters.controls.append(RenderedChapter(empty_chapter, 1, questions, self.delete_chapter))
             self.update()
 
         def delete_chapter(self, chapter):
@@ -144,16 +152,37 @@ def ViewQuestionnaires(page, bar, rail):
             self.update()
         
         def save_edit(self, e):
-            new_questionnaire = Questionnaire(name=self.name.value, version=self.questionnaire.version+1, author='', id_chapters='')
-            db.add_questionnaire(new_questionnaire)
-            self.cancel_edit(e)
+            self.questionnaire.set_id_chapters([x.chapter.id for x in self.chapters.controls])
+            print(self.questionnaire.id_chapters)
+            #Баг - если изменить название в новом опроснике несколько раз, сохраняется только последняя версия, если вернуть в исходному названию - выдается ошибка при сохранении.
+            #наверное можно пересоздавать весь Questionnaire при сохранении, это самый просто вариант
+            #if self.questionnaire.name == self.initial_questionnaire.name and self.questionnaire.version == self.initial_questionnaire.version and self.questionnaire.id_chapters == self.initial_questionnaire.id_chapters:
+            if hash_id([self.questionnaire.name, self.questionnaire.version, self.questionnaire.id_chapters]) == self.initial_questionnaire.id:
+                print("Опросник существует") #прикрутить окно с предупреждением
+            else:
+                if self.questionnaire.name == self.initial_questionnaire.name: 
+                    self.questionnaire.version += 1
+                    self.initial_questionnaire.id_succesor = self.questionnaire.id
+                    db.add_questionnaire(self.initial_questionnaire)
+                else:
+                    self.questionnaire.version = 1
+                
+                db.add_questionnaire(self.questionnaire)
+            
+            self.name.disabled = True
+            self.chapters.disabled = True
+            self.button_add_chapter.disabled = True
+            self.button_allow_edit.visible = True
+            self.button_cancel_edit.visible = False
+            self.button_save_edit.visible = False
+            self.update()
 
  
     db = DataBase(db_name=DATABASE_URL)
 
     tables_select = db.select_questionnaries_table()
 
-    questionnaire_select = db.select_questionnaire_by_id(1)
+    questionnaire_select = db.select_questionnaire_by_id("25e668673bb3dc86edd0f98b186423bfa1d2aeba0a476c408928a360")
 
 
  
