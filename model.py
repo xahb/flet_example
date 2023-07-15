@@ -50,6 +50,10 @@ class Questionnaire(Base):
     
     def set_id_chapters(self, lst):
         self.id_chapters = list_to_string2(lst)
+        print(self.id_chapters)
+
+    def update_id(self):
+        self.id = hash_id([self.name, self.version, self.id_chapters])
 
 
 class Chapter(Base):
@@ -71,6 +75,10 @@ class Chapter(Base):
     def set_id_questions(self, lst):
         self.id_questions = list_to_string2(lst)
 
+    def update_id(self):
+        self.id = hash_id([self.text, self.id_questions])
+
+
 class Question(Base):
     __tablename__ = 'Questions'
     id = Column(String, primary_key=True)
@@ -81,6 +89,9 @@ class Question(Base):
         self.id = hash_id([text, is_obligatory])        
         self.text = text
         self.is_obligatory = is_obligatory
+
+    def update_id(self):
+        self.id = hash_id([self.text, self.is_obligatory])
 
 
 class DataBase:
@@ -97,7 +108,7 @@ class DataBase:
     def select_questionnaire_by_id(self, ext_id):
         questionnaire = self.session.query(Questionnaire).filter_by(id = ext_id).first()
         questionnaire_chapterlist = questionnaire.get_id_chapters()
-        print(questionnaire_chapterlist)
+        #print(questionnaire_chapterlist)
         chapters = self.session.query(Chapter).filter(Chapter.id.in_(questionnaire_chapterlist))#.order_by("order")
 
         full_chapters = {}
@@ -105,6 +116,9 @@ class DataBase:
             full_chapters[chapter] = self.session.query(Question).filter(Question.id.in_(chapter.get_id_questions()))#.order_by("order") 
 
         return {'questionnaire':questionnaire, 'chapters':full_chapters}
+    
+    def commit(self):
+        self.session.commit()
     
     def add_questionnaire(self, new_questionnaire):
         self.session.add(new_questionnaire)

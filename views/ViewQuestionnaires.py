@@ -97,7 +97,7 @@ def ViewQuestionnaires(page, bar, rail):
                                                id_chapters_string = self.initial_questionnaire.id_chapters)
             self.raw_chapters = questionnaire_elements['chapters']
             self.questionnaire.set_id_chapters([x.id for x in self.raw_chapters.keys()])
-            print(self.questionnaire.id_chapters)
+            #print(self.questionnaire.id_chapters)
             #self.name_text = self.questionnaire.name
 
         def build(self):    
@@ -156,17 +156,18 @@ def ViewQuestionnaires(page, bar, rail):
             print(self.questionnaire.id_chapters)
             #Баг - если изменить название в новом опроснике несколько раз, сохраняется только последняя версия, если вернуть в исходному названию - выдается ошибка при сохранении.
             #наверное можно пересоздавать весь Questionnaire при сохранении, это самый просто вариант
-            #if self.questionnaire.name == self.initial_questionnaire.name and self.questionnaire.version == self.initial_questionnaire.version and self.questionnaire.id_chapters == self.initial_questionnaire.id_chapters:
             if hash_id([self.questionnaire.name, self.questionnaire.version, self.questionnaire.id_chapters]) == self.initial_questionnaire.id:
                 print("Опросник существует") #прикрутить окно с предупреждением
             else:
                 if self.questionnaire.name == self.initial_questionnaire.name: 
                     self.questionnaire.version += 1
                     self.initial_questionnaire.id_succesor = self.questionnaire.id
-                    db.add_questionnaire(self.initial_questionnaire)
+                    db.commit()
+                    print('OK here')
                 else:
                     self.questionnaire.version = 1
                 
+                self.questionnaire.update_id()
                 db.add_questionnaire(self.questionnaire)
             
             self.name.disabled = True
